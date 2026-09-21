@@ -239,6 +239,11 @@ input[type=range]{accent-color:var(--accent);width:150px;vertical-align:middle}
 .dtag{align-self:flex-start;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--slot-c);color:#fff}
 .dnote{font-size:12.5px;color:var(--muted)}
 .dempty{padding:44px 10px;text-align:center;color:var(--muted);line-height:1.8}
+.emptybig{text-align:center;padding:34px 20px 30px}
+.eb-icon{font-size:42px;line-height:1}
+.eb-title{font-size:17.5px;font-weight:700;margin:14px 0 8px}
+.eb-text{color:var(--muted);font-size:13.5px;line-height:1.75;max-width:30em;margin:0 auto}
+.eb-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
 
 /* ---------- 导入 ---------- */
 h2.sec{font-size:15.5px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
@@ -1022,12 +1027,15 @@ function applyRecommended() {
 }
 function renderSchedule() {
   var mode = resolveViewMode();
-  $('#weekWrap').classList.toggle('hidden', mode !== 'week');
-  $('#dayWrap').classList.toggle('hidden', mode !== 'day');
-  $('#legend').classList.toggle('hidden', mode === 'day');
+  var hasData = state.courses.length > 0;
+  $('#weekWrap').classList.toggle('hidden', !hasData || mode !== 'week');
+  $('#dayWrap').classList.toggle('hidden', !hasData || mode !== 'day');
+  $('#legend').classList.toggle('hidden', !hasData || mode === 'day');
+  $('#viewToggle').classList.toggle('hidden', !hasData);
   $$('#viewToggle button').forEach(function (b) {
     b.classList.toggle('on', b.getAttribute('data-view') === mode);
   });
+  if (!hasData) { renderEmpty(); return; }
   if (mode === 'week') renderGrid(); else renderDayView();
 }
 
@@ -1325,11 +1333,18 @@ function renderEmpty() {
     box.innerHTML = n ? '' : '<div class="empty-tip">这一周（第 ' + viewWeek + ' 周）没有课程安排 🍃</div>';
     return;
   }
-  box.innerHTML = '<div class="empty-tip">还没有课表数据。<br>' +
-    '去「导入」标签页从教务系统导入，或者点下面的按钮快速看一眼效果。<br><br>' +
-    '<button class="btn primary" id="emptyDemo">载入示例课表</button></div>';
-  var b = $('#emptyDemo');
-  if (b) b.addEventListener('click', loadDemo);
+  box.innerHTML =
+    '<div class="card emptybig">' +
+      '<div class="eb-icon">📚</div>' +
+      '<div class="eb-title">还没有课表数据</div>' +
+      '<div class="eb-text">去「导入」标签页从教务系统导入课表；<br>想先看看效果，也可以载入一份示例课表。</div>' +
+      '<div class="eb-actions">' +
+        '<button class="btn primary" id="emptyGoImport">去导入课表</button>' +
+        '<button class="btn ghost" id="emptyDemo">载入示例课表</button>' +
+      '</div>' +
+    '</div>';
+  $('#emptyDemo').addEventListener('click', loadDemo);
+  $('#emptyGoImport').addEventListener('click', function () { switchTab('import'); });
 }
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[m]; }); }
